@@ -11,7 +11,7 @@ openai.Model.list()
 def home():
    return render_template('index.html')
 
-@app.route('/eprompt', methods=['POST', 'GET'])
+@app.route('/result', methods=['POST', 'GET'])
 def eprompt():
     output = ""
     if request.method == "POST":
@@ -23,7 +23,7 @@ def eprompt():
         ]
         )
         output = completion.choices[0].message.content
-    return render_template('index.html', output=output)
+    return render_template('result.html', output=output)
 
 if __name__ == '__main__':
    app.run(debug = True)
