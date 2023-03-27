@@ -14,6 +14,6 @@ CREATE TABLE post (
   prompt TEXT NOT NULL,
   essay TEXT NOT NULL,
   chatGPT TEXT NOT NULL,
-  spacyScore INT
+  spacyScore INT,
   FOREIGN KEY (author_id) REFERENCES user (id)
 );

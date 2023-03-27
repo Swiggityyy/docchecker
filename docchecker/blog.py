@@ -26,7 +26,7 @@ def index():
     """Show all the posts, most recent first."""
     db = get_db()
     posts = db.execute(
-        "SELECT p.id, prompt, essay, created, author_id, username"
+        "SELECT p.id, prompt, essay, chatGPT, created, author_id, username"
         " FROM post p JOIN user u ON p.author_id = u.id"
         " ORDER BY created DESC"
     ).fetchall()
@@ -46,7 +46,7 @@ def get_post(id, check_author=True):
     post = (
         get_db()
         .execute(
-            "SELECT p.id, prompt, essay, created, author_id, username"
+            "SELECT p.id, prompt, essay, created, chatGPT, author_id, username"
             " FROM post p JOIN user u ON p.author_id = u.id"
             " WHERE p.id = ?",
             (id,),
@@ -82,13 +82,13 @@ def create():
             completion = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-            {"role": "system", "content": essay}
+            {"role": "system", "content": prompt}
             ]
             )
             chatGPT = completion.choices[0].message.content
             db = get_db()
             db.execute(
-                "INSERT INTO post (prompt, essay, author_id, chatGPT) VALUES (?, ?, ?, ?)",
+                "INSERT INTO post (prompt, essay, chatGPT, author_id) VALUES (?, ?, ?, ?)",
                 (prompt, essay, chatGPT, g.user["id"]),
             )
             db.commit()
@@ -114,9 +114,16 @@ def update(id):
         if error is not None:
             flash(error)
         else:
+            completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+            {"role": "system", "content": prompt}
+            ]
+            )
+            chatGPT = completion.choices[0].message.content
             db = get_db()
             db.execute(
-                "UPDATE post SET prompt = ?, essay = ? WHERE id = ?", (prompt, essay, id)
+                "UPDATE post SET chatGPT = ?, prompt = ?, essay = ? WHERE id = ?", (chatGPT, prompt, essay, id)
             )
             db.commit()
             return redirect(url_for("blog.index"))
