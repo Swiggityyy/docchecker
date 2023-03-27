@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}New Check{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <label for="prompt">Essay Prompt</label>
+    <textarea name="prompt" id="prompt" placeholder="Your essay prompt goes here...">{{ request.form['prompt'] }}</textarea>
+    <label for="essay">Submission</label>
+    <textarea name="essay" id="essay" placeholder="Your student's essay submission goes here...">{{ request.form['essay'] }}</textarea>
+    <input type="submit" value="Save">
+  </form>
+{% endblock %}
