@@ -6,9 +6,9 @@ from flask import render_template
 from flask import request
 from flask import url_for
 from werkzeug.exceptions import abort
-import os
 import openai
 import keys
+import pandas as pd
 
 from docchecker.auth import login_required
 from docchecker.db import get_db
@@ -32,7 +32,23 @@ def index():
     ).fetchall()
     return render_template("blog/index.html", posts=posts)
 
+def spacey():
+    db = get_db()
+    posts = db.execute(
+    "SELECT p.id, prompt, essay, chatGPT, created, author_id, username"
+    ).fetchall()
+    with open (db, "r") as f:
+        text = f.read()
+        chapters = text.split("\n\n")[1:]
 
+    chapter1 = chapters[0]
+
+    nlp = spacy.load("en_core_web_lg")
+
+    doc = nlp(chapter1)
+    sentences = list(doc.sents)
+    print (sentences[1])
+    
 def get_post(id, check_author=True):
     """Get a post and its author by id.
     Checks that the id exists and optionally that the current user is
