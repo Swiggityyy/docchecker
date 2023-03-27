@@ -9,7 +9,7 @@ openai.Model.list()
 completion = openai.ChatCompletion.create(
   model="gpt-3.5-turbo",
   messages=[
-        {"role": "system", "content": "Write a paragraph about why snails are amazing."}
+        {"role": "system", "content": eprompt}
     ]
 )
 
