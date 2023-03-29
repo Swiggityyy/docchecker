@@ -8,7 +8,8 @@ from flask import url_for
 from werkzeug.exceptions import abort
 import openai
 import keys
-import pandas as pd
+import spacy
+from spacy.matcher import DependencyMatcher
 
 from docchecker.auth import login_required
 from docchecker.db import get_db
@@ -17,6 +18,7 @@ openai.organization = keys.organizationid
 openai.api_key = keys.apikey
 openai.Model.list()
 
+nlp = spacy.load("en_core_web_lg")
 
 bp = Blueprint("blog", __name__)
 
@@ -26,29 +28,13 @@ def index():
     """Show all the posts, most recent first."""
     db = get_db()
     posts = db.execute(
-        "SELECT p.id, prompt, essay, chatGPT, created, author_id, username"
+        "SELECT p.id, prompt, essay, chatGPT, created, author_id, username, spacyScore"
         " FROM post p JOIN user u ON p.author_id = u.id"
         " ORDER BY created DESC"
     ).fetchall()
     return render_template("blog/index.html", posts=posts)
 
-def spacey():
-    db = get_db()
-    posts = db.execute(
-    "SELECT p.id, prompt, essay, chatGPT, created, author_id, username"
-    ).fetchall()
-    with open (db, "r") as f:
-        text = f.read()
-        chapters = text.split("\n\n")[1:]
 
-    chapter1 = chapters[0]
-
-    nlp = spacy.load("en_core_web_lg")
-
-    doc = nlp(chapter1)
-    sentences = list(doc.sents)
-    print (sentences[1])
-    
 def get_post(id, check_author=True):
     """Get a post and its author by id.
     Checks that the id exists and optionally that the current user is
@@ -62,7 +48,7 @@ def get_post(id, check_author=True):
     post = (
         get_db()
         .execute(
-            "SELECT p.id, prompt, essay, created, chatGPT, author_id, username"
+            "SELECT p.id, prompt, essay, created, chatGPT, author_id, username, spacyScore"
             " FROM post p JOIN user u ON p.author_id = u.id"
             " WHERE p.id = ?",
             (id,),
@@ -102,10 +88,15 @@ def create():
             ]
             )
             chatGPT = completion.choices[0].message.content
+            #spacy
+            s1 = nlp(essay)
+            s2 = nlp(chatGPT)
+            spacyScore = s1.similarity(s2)
+            #end spacy
             db = get_db()
             db.execute(
-                "INSERT INTO post (prompt, essay, chatGPT, author_id) VALUES (?, ?, ?, ?)",
-                (prompt, essay, chatGPT, g.user["id"]),
+                "INSERT INTO post (prompt, essay, chatGPT, spacyScore, author_id) VALUES (?, ?, ?, ?, ?)",
+                (prompt, essay, chatGPT, spacyScore, g.user["id"]),
             )
             db.commit()
             return redirect(url_for("blog.index"))
