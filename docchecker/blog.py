@@ -128,9 +128,14 @@ def update(id):
             ]
             )
             chatGPT = completion.choices[0].message.content
+            #spacy
+            s1 = nlp(essay)
+            s2 = nlp(chatGPT)
+            spacyScore = s1.similarity(s2)
+            #end spacy
             db = get_db()
             db.execute(
-                "UPDATE post SET chatGPT = ?, prompt = ?, essay = ? WHERE id = ?", (chatGPT, prompt, essay, id)
+                "UPDATE post SET chatGPT = ?, prompt = ?, essay = ?, spacyScore = ? WHERE id = ?", (chatGPT, prompt, essay, spacyScore, id)
             )
             db.commit()
             return redirect(url_for("blog.index"))
